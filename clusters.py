@@ -308,7 +308,7 @@ def word2vec_baseline():
             actctr.update(map(len, subdirs[subdir].values()))
             train_pos_pairs |= set(pp)
             train_neg_pairs |= set(_np)
-        elif 24 <= subdir_num <= 43:
+        elif 24 <= subdir_num <= 45:
             test_pos_pairs |= set(pp)
             test_neg_pairs |= set(_np)
             for cluster in subdirs[subdir].values():
@@ -367,6 +367,7 @@ def word2vec_baseline():
 
     compute_fscore(test_pos_pairs, set(pred_pos))
     write_gold_clusters(clusters)
+    write_gold_pairs(set(pred_pos))
 
 def write_gold_pairs(pairs):
     normalize_pairs(pairs)
