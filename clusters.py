@@ -381,16 +381,11 @@ def write_gold_clusters(clusters):
     outfile = open('predicted_gold_clusters.csv', 'w')
     df = all_data
     for cluster in clusters.values():
-        pairs = [(x, y) for x in cluster for y in cluster if x < y]
-        for (x, y) in pairs[:-1]:
-            outfile.write("%s,%s,%s,%s," %(df[2][x], df[3][x], 
-                df[2][y], df[3][y]))
-        if len(pairs) > 0:
-            x, y = pairs[-1]
-            outfile.write("%s,%s,%s,%s\n" %(df[2][x], df[3][x], 
-                df[2][y], df[3][y]))
-        elif len(cluster) == 1:
-            outfile.write("%s,%s\n" % (df[2][cluster[0]], df[3][cluster[0]]))
+        for x in cluster[:-1]:
+            outfile.write("%s,%s," %(df[2][x], df[3][x]))
+        if len(cluster) > 0:
+            x = cluster[-1]
+            outfile.write("%s,%s\n" %(df[2][x], df[3][x]))
     outfile.close()
 
 
