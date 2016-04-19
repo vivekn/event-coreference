@@ -298,15 +298,17 @@ def word2vec_baseline():
     test_neg_pairs = set()
     missing = set()
     actual = 0
+    actctr = Counter()
 
     for subdir in subdirs:
         pp, _np = get_pairs(subdirs[subdir])
         subdir_num = int(subdir)
-        if subdir_num < 20:
+        if subdir_num <= 20:
             actual += len(subdirs[subdir])
+            actctr.update(map(len, subdirs[subdir].values()))
             train_pos_pairs |= set(pp)
             train_neg_pairs |= set(_np)
-        elif 20 < subdir_num <= 30:
+        elif 24 <= subdir_num <= 43:
             test_pos_pairs |= set(pp)
             test_neg_pairs |= set(_np)
             for cluster in subdirs[subdir].values():
@@ -327,7 +329,7 @@ def word2vec_baseline():
     # Generate train data
     a1 = np.array([[w2v_cosine_table[i, j], cosine_table[i, j]] for (i, j) in train_pos_pairs])
     a2 = np.array([[w2v_cosine_table[i, j], cosine_table[i, j]] for (i, j) in train_neg_pairs])
-    poly = PolynomialFeatures(degree=3)
+    poly = PolynomialFeatures(degree=2)
     Xtrain = poly.fit_transform(np.concatenate([a1, a2]))
     ytrain = np.concatenate([np.ones(len(train_pos_pairs)),
                         np.zeros(len(train_neg_pairs))])
@@ -341,8 +343,7 @@ def word2vec_baseline():
         np.array([[w2v_cosine_table[i, j], cosine_table[i, j]] for (i, j) in test_pos_pairs]),
         np.array([[w2v_cosine_table[i, j], cosine_table[i, j]] for (i, j) in test_neg_pairs])
     ]))
-    ytest = np.concatenate([np.ones(len(test_pos_pairs)),
-                        np.zeros(len(test_neg_pairs))])
+
     pred_pairs = model.predict(Xtest)
     print np.sum(pred_pairs)
 
@@ -361,10 +362,11 @@ def word2vec_baseline():
     print "Predicted", len(clusters)
     print Counter(map(len, clusters.values()))
     print "Actual", actual
+    print actctr
     pred_pos, _ = get_pairs(clusters)
 
     compute_fscore(test_pos_pairs, set(pred_pos))
-    write_gold_pairs(set(pred_pos))
+    write_gold_clusters(clusters)
 
 def write_gold_pairs(pairs):
     normalize_pairs(pairs)
@@ -375,6 +377,21 @@ def write_gold_pairs(pairs):
             df[2][y], df[3][y]))
     outfile.close()
 
+def write_gold_clusters(clusters):
+    outfile = open('predicted_gold_clusters.csv', 'w')
+    df = all_data
+    for cluster in clusters.values():
+        pairs = [(x, y) for x in cluster for y in cluster if x < y]
+        for (x, y) in pairs[:-1]:
+            outfile.write("%s,%s,%s,%s," %(df[2][x], df[3][x], 
+                df[2][y], df[3][y]))
+        if len(pairs) > 0:
+            x, y = pairs[-1]
+            outfile.write("%s,%s,%s,%s\n" %(df[2][x], df[3][x], 
+                df[2][y], df[3][y]))
+        elif len(cluster) == 1:
+            outfile.write("%s,%s\n" % (df[2][cluster[0]], df[3][cluster[0]]))
+    outfile.close()
 
 
 if __name__ == "__main__":
